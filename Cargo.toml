@@ -6,6 +6,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 documentation = "https://docs.rs/bytesagent"
 repository = "https://github.com/morr0ne/bytesagent"
+description = "Tell bytes what to do in rust"
 edition = "2021"
 
 [dependencies]
