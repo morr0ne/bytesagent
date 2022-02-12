@@ -1,0 +1,8 @@
+[package]
+name = "bytesagent"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+glam = { version = "0.20.2", optional = true }
+half = { version = "1.8.2", optional = true }
