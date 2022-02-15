@@ -12,36 +12,26 @@ use glam::{
 #[cfg(feature = "half")]
 use half::{bf16, f16};
 
-/// Cast to bytes
-pub trait AsBytes {
-    /// Re
+pub trait Pod {
     fn as_bytes(&self) -> &[u8];
-}
-
-/// Cast to bytes mut
-pub trait AsBytesMut {
-    /// Re mut
     fn as_bytes_mut(&mut self) -> &mut [u8];
 }
 
-macro_rules! impl_types {
+macro_rules! impl_pod {
     ($($ty:ty)+) => {
         $(
-        // Plain types can be simply casted to the correct memory rappresentation.
-        impl AsBytes for $ty {
+        // Plain types can be simply asked to the correct memory representation.
+        impl Pod for $ty {
             fn as_bytes(&self) -> &[u8] {
                 unsafe { &*(self as *const $ty as *const [u8; core::mem::size_of::<$ty>()]) }
             }
-        }
-        impl AsBytesMut for $ty {
             fn as_bytes_mut(&mut self) -> &mut [u8] {
                 unsafe { &mut*(self as *mut $ty as *mut [u8; core::mem::size_of::<$ty>()]) }
             }
         }
-        // Unfotunatly untill const generics get stabilzed we can not do the above with arrays.
-        // Instead we have the create a slice from the raw parts which *in theory* involves a memcpy.
-        // This issue could be solved by implementing the method for every single (reasonable) array size like many crates do but this is fine for now.
-        impl<const N: usize> AsBytes for [$ty; N] {
+        // Unfortunately until const generics get stabilized we cannot do the above with arrays.
+        // This however is a non issue: the final asm (at least in release mode) is the same.
+        impl<const N: usize> Pod for [$ty; N] {
             fn as_bytes(&self) -> &[u8] {
                 unsafe {
                     core::slice::from_raw_parts(
@@ -50,8 +40,6 @@ macro_rules! impl_types {
                     )
                 }
             }
-        }
-        impl<const N: usize> AsBytesMut for [$ty; N] {
             fn as_bytes_mut(&mut self) -> &mut [u8] {
                 unsafe {
                     core::slice::from_raw_parts_mut(
@@ -65,34 +53,10 @@ macro_rules! impl_types {
     }
 }
 
-// For u8 we don't need to do anything so it makes much more sense to manually implement it
-impl AsBytes for u8 {
-    fn as_bytes(&self) -> &[u8] {
-        core::slice::from_ref(self)
-    }
-}
-impl AsBytesMut for u8 {
-    fn as_bytes_mut(&mut self) -> &mut [u8] {
-        core::slice::from_mut(self)
-    }
-}
-impl<const N: usize> AsBytes for [u8; N] {
-    fn as_bytes(&self) -> &[u8] {
-        self
-    }
-}
-impl<const N: usize> AsBytesMut for [u8; N] {
-    fn as_bytes_mut(&mut self) -> &mut [u8] {
-        self
-    }
-}
-
 // Implement for all the primitive types which are "plain old data types" so are just repprasented as a series of bytes in memory.
-impl_types!(u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize f32 f64);
+impl_pod!(u8 u16 u32 u64 u128 usize i8 i16 i32 i64 i128 isize  f32 f64);
 #[cfg(feature = "half")]
-impl_types!(f16 bf16);
+impl_pod!(f16 bf16);
 // This types from glam are also represented in memory by a series of bytes so this is also fine.
 #[cfg(feature = "glam")]
-impl_types!(DMat2 DMat3 DMat4 DQuat DVec2 DVec3 DVec4 IVec2 IVec3 IVec4 Mat2 Mat3 Mat4 Quat UVec2 UVec3 UVec4 Vec2 Vec3 Vec4);
-
-// TODO: Implement AsBytes/AsBytesMut for other libraries and/or make it possible for other libraries to implement the trait
+impl_pod!(DMat2 DMat3 DMat4 DQuat DVec2 DVec3 DVec4 IVec2 IVec3 IVec4 Mat2 Mat3 Mat4 Quat UVec2 UVec3 UVec4 Vec2 Vec3 Vec4);
