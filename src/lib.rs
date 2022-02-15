@@ -12,7 +12,7 @@ use glam::{
 #[cfg(feature = "half")]
 use half::{bf16, f16};
 
-pub trait Pod {
+pub unsafe trait Pod {
     fn as_bytes(&self) -> &[u8];
     fn as_bytes_mut(&mut self) -> &mut [u8];
 }
@@ -21,7 +21,7 @@ macro_rules! impl_pod {
     ($($ty:ty)+) => {
         $(
         // Plain types can be simply asked to the correct memory representation.
-        impl Pod for $ty {
+        unsafe impl Pod for $ty {
             fn as_bytes(&self) -> &[u8] {
                 unsafe { &*(self as *const $ty as *const [u8; core::mem::size_of::<$ty>()]) }
             }
@@ -31,7 +31,7 @@ macro_rules! impl_pod {
         }
         // Unfortunately until const generics get stabilized we cannot do the above with arrays.
         // This however is a non issue: the final asm (at least in release mode) is the same.
-        impl<const N: usize> Pod for [$ty; N] {
+        unsafe impl<const N: usize> Pod for [$ty; N] {
             fn as_bytes(&self) -> &[u8] {
                 unsafe {
                     core::slice::from_raw_parts(
