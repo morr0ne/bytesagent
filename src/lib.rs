@@ -36,12 +36,43 @@ pub unsafe trait Pod {
     /// TODO
     fn from_bytes(bytes: &[u8]) -> Result<&Self>
     where
-        Self: Sized;
+        Self: Sized,
+    {
+        if bytes.len() == core::mem::size_of::<Self>() {
+            Ok(unsafe { Self::from_bytes_unchecked(bytes) })
+        } else {
+            Err(Error::Size)
+        }
+    }
+    /// # Safety
+    /// TODO
+    unsafe fn from_bytes_unchecked(bytes: &[u8]) -> &Self
+    where
+        Self: Sized,
+    {
+        &*bytes.as_ptr().cast::<Self>()
+    }
     /// # Errors
     /// TODO
     fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self>
     where
-        Self: Sized;
+        Self: Sized,
+    {
+        if bytes.len() == core::mem::size_of::<Self>() {
+            Ok(unsafe { Self::from_bytes_mut_unchecked(bytes) })
+        } else {
+            Err(Error::Size)
+        }
+    }
+
+    /// # Safety
+    /// TODO
+    unsafe fn from_bytes_mut_unchecked(bytes: &mut [u8]) -> &mut Self
+    where
+        Self: Sized,
+    {
+        &mut *bytes.as_mut_ptr().cast::<Self>()
+    }
 }
 
 macro_rules! impl_pod {
@@ -50,30 +81,10 @@ macro_rules! impl_pod {
         // Plain types can be simply asked to the correct memory representation.
         unsafe impl Pod for $ty {
             fn as_bytes(&self) -> &[u8] {
-                unsafe { &*(self as *const $ty as *const [u8; core::mem::size_of::<$ty>()]) }
+                unsafe { &*(self as *const $ty).cast::<[u8; 4]>() }
             }
             fn as_bytes_mut(&mut self) -> &mut [u8] {
-                unsafe { &mut*(self as *mut $ty as *mut [u8; core::mem::size_of::<$ty>()]) }
-            }
-            fn from_bytes(bytes: &[u8]) -> Result<&Self>
-            where
-                Self: Sized
-            {
-                if bytes.len() == core::mem::size_of::<Self>() {
-                    Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
-                } else {
-                  Err(Error::Size)
-                }
-            }
-            fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self>
-            where
-                Self: Sized
-            {
-                if bytes.len() == core::mem::size_of::<Self>() {
-                    Ok(unsafe { &mut *(bytes.as_mut_ptr() as *mut Self) })
-                } else {
-                  Err(Error::Size)
-                }
+                unsafe { &mut*(self as *mut $ty).cast::<[u8; 4]>() }
             }
         }
         // Unfortunately until const generics get stabilized we cannot do the above with arrays.
@@ -93,26 +104,6 @@ macro_rules! impl_pod {
                         self.as_mut_ptr().cast(),
                         self.len() * core::mem::size_of::<$ty>(),
                     )
-                }
-            }
-            fn from_bytes(bytes: &[u8]) -> Result<&Self>
-            where
-                Self: Sized
-            {
-                if bytes.len() == core::mem::size_of::<Self>() {
-                    Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
-                } else {
-                  Err(Error::Size)
-                }
-            }
-            fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self>
-            where
-                Self: Sized
-            {
-                if bytes.len() == core::mem::size_of::<Self>() {
-                    Ok(unsafe { &mut *(bytes.as_mut_ptr() as *mut Self) })
-                } else {
-                  Err(Error::Size)
                 }
             }
         }
