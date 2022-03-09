@@ -1,6 +1,6 @@
 #![no_std] // Crate aims to me no std friendly
-#![warn(missing_docs)] // I'd like for everything to be documented properly
 #![allow(clippy::size_of_in_element_count)] // Clippy miss-detects this in the macros
+#![warn(clippy::pedantic)]
 
 //! A small crate to cast to and from arbitrary bytes
 
