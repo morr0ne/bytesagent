@@ -37,6 +37,11 @@ pub unsafe trait Pod {
     fn from_bytes(bytes: &[u8]) -> Result<&Self>
     where
         Self: Sized;
+    /// # Errors
+    /// TODO
+    fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self>
+    where
+        Self: Sized;
 }
 
 macro_rules! impl_pod {
@@ -56,6 +61,16 @@ macro_rules! impl_pod {
             {
                 if bytes.len() == core::mem::size_of::<Self>() {
                     Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
+                } else {
+                  Err(Error::Size)
+                }
+            }
+            fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self>
+            where
+                Self: Sized
+            {
+                if bytes.len() == core::mem::size_of::<Self>() {
+                    Ok(unsafe { &mut *(bytes.as_mut_ptr() as *mut Self) })
                 } else {
                   Err(Error::Size)
                 }
@@ -86,6 +101,16 @@ macro_rules! impl_pod {
             {
                 if bytes.len() == core::mem::size_of::<Self>() {
                     Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
+                } else {
+                  Err(Error::Size)
+                }
+            }
+            fn from_bytes_mut(bytes: &mut [u8]) -> Result<&mut Self>
+            where
+                Self: Sized
+            {
+                if bytes.len() == core::mem::size_of::<Self>() {
+                    Ok(unsafe { &mut *(bytes.as_mut_ptr() as *mut Self) })
                 } else {
                   Err(Error::Size)
                 }
