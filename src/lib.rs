@@ -11,14 +11,32 @@ use glam::{
 #[cfg(feature = "half")]
 use half::{bf16, f16};
 
-#[derive(Debug, thiserror::Error)]
-pub enum Error {}
+#[derive(Debug)]
+pub enum Error {
+    Size,
+}
+
+impl std::error::Error for Error {}
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Size => write!(f, ""),
+        }
+    }
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// # Safety
 /// Implementors must ensure that the type is nothing more than a sequence of bytes
 pub unsafe trait Pod {
     fn as_bytes(&self) -> &[u8];
     fn as_bytes_mut(&mut self) -> &mut [u8];
+    /// # Errors
+    /// TODO
+    fn from_bytes(bytes: &[u8]) -> Result<&Self>
+    where
+        Self: Sized;
 }
 
 macro_rules! impl_pod {
@@ -31,6 +49,16 @@ macro_rules! impl_pod {
             }
             fn as_bytes_mut(&mut self) -> &mut [u8] {
                 unsafe { &mut*(self as *mut $ty as *mut [u8; core::mem::size_of::<$ty>()]) }
+            }
+            fn from_bytes(bytes: &[u8]) -> Result<&Self>
+            where
+                Self: Sized
+            {
+                if bytes.len() == core::mem::size_of::<Self>() {
+                    Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
+                } else {
+                  Err(Error::Size)
+                }
             }
         }
         // Unfortunately until const generics get stabilized we cannot do the above with arrays.
@@ -50,6 +78,16 @@ macro_rules! impl_pod {
                         self.as_mut_ptr().cast(),
                         self.len() * core::mem::size_of::<$ty>(),
                     )
+                }
+            }
+            fn from_bytes(bytes: &[u8]) -> Result<&Self>
+            where
+                Self: Sized
+            {
+                if bytes.len() == core::mem::size_of::<Self>() {
+                    Ok(unsafe { &*(bytes.as_ptr() as *const Self) })
+                } else {
+                  Err(Error::Size)
                 }
             }
         }
