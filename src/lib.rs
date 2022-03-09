@@ -1,4 +1,3 @@
-#![no_std] // Crate aims to me no std friendly
 #![allow(clippy::size_of_in_element_count)] // Clippy miss-detects this in the macros
 #![warn(clippy::pedantic)]
 
@@ -12,6 +11,11 @@ use glam::{
 #[cfg(feature = "half")]
 use half::{bf16, f16};
 
+#[derive(Debug, thiserror::Error)]
+pub enum Error {}
+
+/// # Safety
+/// Implementors must ensure that the type is nothing more than a sequence of bytes
 pub unsafe trait Pod {
     fn as_bytes(&self) -> &[u8];
     fn as_bytes_mut(&mut self) -> &mut [u8];
