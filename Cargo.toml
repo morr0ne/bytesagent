@@ -1,6 +1,6 @@
 [package]
 name = "bytesagent"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Federico Maria Morrone <contact@morrone.dev>"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -10,5 +10,9 @@ description = "Tell bytes what to do in rust"
 edition = "2021"
 
 [dependencies]
-glam = { version = "0.20.2", optional = true }
-half = { version = "1.8.2", optional = true }
+glam = { version = "0.21.3", optional = true, default-features = false }
+half = { version = "2.1.0", optional = true, default-features = false }
+
+[features]
+default = ["std"]
+std = ["glam?/std", "half?/std"]

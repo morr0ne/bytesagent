@@ -1,5 +1,6 @@
 #![allow(clippy::size_of_in_element_count)] // Clippy miss-detects this in the macros
 #![warn(clippy::pedantic)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 //! A small crate to cast to and from arbitrary bytes
 
@@ -16,16 +17,17 @@ pub enum Error {
     Size,
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Error::Size => write!(f, ""),
         }
     }
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T, E = Error> = core::result::Result<T, E>;
 
 /// # Safety
 /// Implementors must ensure that the type is nothing more than a sequence of bytes
