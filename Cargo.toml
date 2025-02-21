@@ -1,8 +1,8 @@
 [package]
 name = "bytesagent"
 version = "0.4.0"
-authors = ["Federico Maria Morrone <contact@morrone.dev>"]
-license = "MIT OR Apache-2.0"
+authors = ["Matilde Morrone <contact@morrone.dev>"]
+license = "Apache-2.0"
 readme = "README.md"
 documentation = "https://docs.rs/bytesagent"
 repository = "https://github.com/morr0ne/bytesagent"
